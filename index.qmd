@@ -1,5 +1,6 @@
 ---
 title: "Workshop for HAT 2026"
+author: Jeremy Selva [`r fontawesome::fa(name = "linkedin", fill = "#0077ac")`](https://www.linkedin.com/in/jeremy-selva-085b9112a/){target="_blank"} [`r fontawesome::fa(name = "github", fill = "#000000")`](https://github.com/JauntyJJS){target="_blank"} [`r fontawesome::fa(name = "fab fa-square-x-twitter", fill = "#000000")`](https://twitter.com/JauntyJJS){target="_blank"} [`r fontawesome::fa(name = "bluesky", fill = "#1084ff")`](https://bsky.app/profile/jauntyjjs.bsky.social){target="_blank"} [<svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:#5f53e7;overflow:visible;position:relative;"><path d="M433 179.1c0-97.2-63.7-125.7-63.7-125.7-62.5-28.7-228.6-28.4-290.5 0 0 0-63.7 28.5-63.7 125.7 0 115.7-6.6 259.4 105.6 289.1 40.5 10.7 75.3 13 103.3 11.4 50.8-2.8 79.3-18.1 79.3-18.1l-1.7-36.9s-36.3 11.4-77.1 10.1c-40.4-1.4-83-4.4-89.6-54a102.5 102.5 0 0 1 -.9-13.9c85.6 20.9 158.7 9.1 178.8 6.7 56.1-6.7 105-41.3 111.2-72.9 9.8-49.8 9-121.5 9-121.5zm-75.1 125.2h-46.6v-114.2c0-49.7-64-51.6-64 6.9v62.5h-46.3V197c0-58.5-64-56.6-64-6.9v114.2H90.2c0-122.1-5.2-147.9 18.4-175 25.9-28.9 79.8-30.8 103.8 6.1l11.6 19.5 11.6-19.5c24.1-37.1 78.1-34.8 103.8-6.1 23.7 27.3 18.4 53 18.4 175z"/></svg>](https://fosstodon.org/@JauntyJJS){target="_blank"} [`r fontawesome::fa(name = "link", fill = "#666666")`](https://jeremy-selva.netlify.app/){target="_blank"}
 format: 
    html:
      toc: true
@@ -8,6 +9,115 @@ format:
        sidebar-width: 0px
        body-width: 1500px
 ---
+
+## R Packages Used
+
+Here are the R packages used in this website.
+
+```{r}
+#| label: R packages load
+#| message: false
+#| echo: false
+
+library(sessioninfo) # R Session Information
+library(medicaldata) # Data Package for Medical Datasets
+library(tibble)      # Simple Data Frames
+library(dplyr)       # A Grammar of Data Manipulation
+library(purrr)       # Functional Programming Tools
+library(reactable)   # Interactive Data Tables for R
+library(gtsummary)   # Presentation-Ready Data Summary and Analytic Result Tables
+library(broom)       # Convert Statistical Objects into Tidy Tibbles
+library(listviewer)  # 'htmlwidget' for Interactive Views of R Lists
+library(cards)       # Analysis Results Data
+library(cardx)       # Extra Analysis Results Data Utilities
+library(jsonlite)    # A Simple and Robust JSON Parser and Generator for R
+library(derrick)     # Export 'gtsummary' Tables with 'reporter'
+library(flextable)   # Functions for Tabular Reporting
+library(flexlsx)     # Exporting 'flextable' to 'xlsx' Files
+library(huxtable)    # Easily Create and Style Tables for LaTeX, HTML and Other Formats
+library(openxlsx)    # Read, Write and Edit xlsx Files
+library(openxlsx2)   # Read, Write and Edit 'xlsx' Files
+# Install from https://github.com/JanMarvin/oxview
+library(oxview)      # Local Canvas Preview for xlsx, docx, and pptx Files
+```
+
+```{r}
+#| label: R packages used
+#| message: false
+#| echo: false
+
+r_package_table <- sessioninfo::package_info()
+rownames(r_package_table) <- NULL
+
+r_package_table <- r_package_table |>
+  tibble::as_tibble() |>
+  dplyr::mutate(
+    version = ifelse(
+      is.na(r_package_table$loadedversion),
+      r_package_table$ondiskversion,
+      r_package_table$loadedversion)
+  ) |>
+  dplyr::filter(.data[["attached"]] == TRUE) |>
+  dplyr::select(
+    dplyr::any_of(
+      c("package", "version", "date", "source")
+    )
+  )
+
+reactable::reactable(
+  r_package_table,
+  defaultPageSize = 5
+)
+
+```
+
+## R Platform Information
+
+Here are the R platform environment used in this analysis.
+
+```{r}
+#| label: R platform used
+#| echo: false
+
+get_knitr_version <- function() {
+
+  knitr_info <- "NA"
+
+  r_package_table <- sessioninfo::package_info(
+    pkgs = c("installed")
+  ) |>
+    dplyr::filter(.data[["package"]] == "knitr")
+
+  if (nrow(r_package_table) == 1) {
+
+    knitr_version <- r_package_table$loadedversion[1]
+    knitr_source <- r_package_table$source[1]
+
+    knitr_info <- paste0(
+      knitr_version, " from ",
+      knitr_source)
+  }
+
+  return(knitr_info)
+
+}
+
+r_platform_table <- suppressWarnings(sessioninfo::platform_info())
+r_platform_table[["knitr"]] <- get_knitr_version()[1]
+
+r_platform_table <- data.frame(
+  setting = names(r_platform_table),
+  value = unlist(r_platform_table,
+                 use.names = FALSE),
+  stringsAsFactors = FALSE
+)
+
+
+reactable::reactable(
+  r_platform_table,
+  defaultPageSize = 5
+)
+```
 
 ## Clean Obstetrics and Periodontal Therapy Dataset
 
@@ -486,10 +596,6 @@ age_race_education_ard_from_df <- opt_age_race_data |>
         )
       )
     ),
-    # cardx::ard_stats_wilcox_test(
-    #   variables = "Age",
-    #   conf.int = TRUE,
-    # ),
     cards::ard_tabulate_value(variables = c("White", "Black", "Hisp")),
     cards::ard_tabulate(variables = c("Education")),
     .by = "Group",
@@ -693,5 +799,6 @@ if(interactive()) {
   oxview::ox_view("table_hux_table.xlsx")
 }
 ```
+
 
 
