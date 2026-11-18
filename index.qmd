@@ -480,7 +480,7 @@ education_ard <- cards::bind_ard(
   education_statistics_ard
 )
 
-age_race_ard_json <- education_ard |> 
+education_ard_json <- education_ard |> 
   cards::as_nested_list() |>
   jsonlite::toJSON(
     pretty = TRUE,
@@ -489,7 +489,7 @@ age_race_ard_json <- education_ard |>
     digits = NA # Full precision
   )
 
-age_race_ard_json |> 
+education_ard_json |> 
   write(file = "output.json")
 ```
 
