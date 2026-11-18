@@ -1,0 +1,697 @@
+---
+title: "Workshop for HAT 2026"
+format: 
+   html:
+     toc: true
+     page-layout: full
+     grid:
+       sidebar-width: 0px
+       body-width: 1500px
+---
+
+## Clean Obstetrics and Periodontal Therapy Dataset
+
+We process the dataset so that we can use it to create summary tables using [`gtsummary`](https://www.danieldsjoberg.com/gtsummary/){target="_blank"}.
+
+```{r}
+#| label: clean opt data
+#| code-fold: true
+opt_data <- medicaldata::opt |> 
+  dplyr::select(c(
+    "PID", "Group",
+    "Age", "Education",
+    "Black", "White", "Asian", "Nat.Am", "Hisp",
+    "BMI", "Diabetes", "Hypertension", "Drug.Add", "Use.Alc", "Use.Tob",
+    "Prev.preg", "Spont.ab", "Induced.ab", "Any.stillbirth", 
+    "Live.PTB", "N.living.kids",
+    "Birth.outcome", "Preg.ended...37.wk", "Birthweight", "GA.at.outcome"
+    )
+  ) |> 
+  dplyr::mutate(
+    dplyr::across(dplyr::where(is.factor), stringr::str_trim)
+  ) |> 
+  dplyr::mutate(
+    Group = dplyr::case_when(
+      .data[["Group"]] == "C"  ~ "Control",
+      .data[["Group"]] == "T"  ~ "Treatment"
+    ) |> 
+      factor(levels = c("Control", "Treatment")
+    ),
+    Education = dplyr::case_when(
+      .data[["Education"]] == "LT 8 yrs"  ~ "≤8 yr",
+      .data[["Education"]] == "8-12 yrs"  ~ "9-12 yr",
+      .data[["Education"]] == "MT 12 yrs"  ~ "> 12 yr"
+    ) |> 
+      factor(levels = c("≤8 yr", "9-12 yr", "> 12 yr")
+    ),  
+    Hisp = dplyr::case_when(
+      .data[["Hisp"]] == ""  ~ "No",
+      .default = .data[["Hisp"]]
+    ),
+    dplyr::across(
+      .cols = c(
+        "Black", "White", "Asian", "Nat.Am", "Hisp"
+      ),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    ),
+    Hypertension = dplyr::case_when(
+      .data[["Hypertension"]] == "N"  ~ "No",
+      .data[["Hypertension"]] == "Y"  ~ "Yes",
+    ),
+    dplyr::across(
+      .cols = c("Diabetes", "Drug.Add", "Use.Alc", "Use.Tob"),
+      .fns = \(x){
+        dplyr::case_when(
+          x == ""  ~ NA,
+          .default = x
+        )
+      }
+    ),
+    dplyr::across(
+      .cols = c(
+        "Hypertension", "Diabetes", 
+        "Drug.Add", "Use.Alc", "Use.Tob"),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    ),
+    dplyr::across(
+      .cols = c("Spont.ab", "Induced.ab", "Any.stillbirth",
+                "Live.PTB"),
+      .fns = \(x){
+        dplyr::case_when(
+          x == ""  ~ NA,
+          .default = x
+        )
+      }
+    ),
+    have_living_child = dplyr::case_when(
+      is.na(.data[["N.living.kids"]]) ~ "No",
+      .data[["N.living.kids"]] == 0 ~ "No",
+      .data[["N.living.kids"]] %in% c("1", "2", "3", "4", "5", "6", "7", "8", "9") ~ "Yes",
+      .default = "Allocation"
+    ),
+    previous_live_preterm_birth = dplyr::case_when(
+      .data[["Prev.preg"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["N.living.kids"]]) & is.na(.data[["Live.PTB"]]) ~ NA,
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["N.living.kids"]]) & .data[["Live.PTB"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & .data[["N.living.kids"]] %in% c("0") & .data[["Live.PTB"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & .data[["N.living.kids"]] %in% c("1", "2", "3", "4", "5", "6", "7", "8", "9") & .data[["Live.PTB"]] == "No" ~ "No",
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["N.living.kids"]]) & .data[["Live.PTB"]] == "Yes" ~ "Yes",
+      .data[["Prev.preg"]] == "Yes" & .data[["N.living.kids"]] %in% c("1", "2", "3", "4", "5", "6", "7", "8", "9") & .data[["Live.PTB"]] == "Yes" ~ "Yes",
+      .default = "Allocation"
+    ),
+    Spont.ab = dplyr::case_when(
+      .data[["Prev.preg"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & .data[["Spont.ab"]] == "No" ~ "No",
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["Spont.ab"]]) ~ "No",
+      .data[["Prev.preg"]] == "Yes" & .data[["Spont.ab"]] == "Yes" ~ "Yes",
+      .default = "Allocation"
+    ),
+    Induced.ab = dplyr::case_when(
+      .data[["Prev.preg"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & .data[["Induced.ab"]] == "No" ~ "No",
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["Induced.ab"]]) ~ "No",
+      .data[["Prev.preg"]] == "Yes" & .data[["Induced.ab"]] == "Yes" ~ "Yes",
+      .default = "Allocation"
+    ),
+    Any.stillbirth = dplyr::case_when(
+      .data[["Prev.preg"]] == "No" ~ NA,
+      .data[["Prev.preg"]] == "Yes" & .data[["Any.stillbirth"]] == "No" ~ "No",
+      .data[["Prev.preg"]] == "Yes" & is.na(.data[["Any.stillbirth"]]) ~ "No",
+      .data[["Prev.preg"]] == "Yes" & .data[["Any.stillbirth"]] == "Yes" ~ "Yes",
+      .default = "Allocation"
+    ),
+    dplyr::across(
+      .cols = c(
+        "Prev.preg", "have_living_child", "previous_live_preterm_birth", 
+        "Spont.ab", "Induced.ab", "Any.stillbirth"),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    ),
+    GA.at.outcome.weeks = .data[["GA.at.outcome"]] / 7,
+    Preg_duration_32 = dplyr::case_when(
+      .data[["GA.at.outcome.weeks"]] < 32 ~ "Yes",
+      .default = "No"
+    ),
+    Preg_duration_35 = dplyr::case_when(
+      .data[["GA.at.outcome.weeks"]] < 35 ~ "Yes",
+      .default = "No"
+    ),
+    Preg_duration_37 = dplyr::case_when(
+      .data[["GA.at.outcome.weeks"]] < 37 ~ "Yes",
+      .default = "No"
+    ),
+    Preg_duration_37_regression = dplyr::case_when(
+      .data[["GA.at.outcome.weeks"]] < 37 ~ 1,
+      .default = 0
+    ),
+    dplyr::across(
+      .cols = c(
+        "Preg_duration_32", "Preg_duration_35", 
+        "Preg_duration_37"),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    ),
+    Birthweight_2500 = dplyr::case_when(
+      .data[["Birthweight"]] < 2500 ~ "Yes",
+      is.na(.data[["Birthweight"]]) ~ NA,
+      .default = "No"
+    ),
+    Birthweight_2500_regression = dplyr::case_when(
+      .data[["Birthweight"]] < 2500 ~ 1,
+      is.na(.data[["Birthweight"]]) ~ NA,
+      .default = 0
+    ),
+    Birthweight_1500 = dplyr::case_when(
+      .data[["Birthweight"]] < 1500 ~ "Yes",
+      is.na(.data[["Birthweight"]]) ~ NA,
+      .default = "No"
+    ),
+    dplyr::across(
+      .cols = c(
+        "Birthweight_2500", "Birthweight_1500"),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    ),
+    GA.at.outcome.weeks = .data[["GA.at.outcome"]] / 7,
+    Have_Live_Birth = dplyr::case_when(
+      .data[["Birth.outcome"]] == "Live birth" ~ "Yes",
+      .default = "No"
+    ),
+    Preterm_32 = dplyr::case_when(
+      .data[["Birth.outcome"]] == "Non-live birth" ~ NA,
+      .data[["Birth.outcome"]] == "Live birth"  & .data[["GA.at.outcome.weeks"]] < 32 ~ "Yes",
+      .default = "No"
+    ),
+    Preterm_35 = dplyr::case_when(
+      .data[["Birth.outcome"]] == "Non-live birth" ~ NA,
+      .data[["Birth.outcome"]] == "Live birth"  & .data[["GA.at.outcome.weeks"]] < 35 ~ "Yes",
+      .default = "No"
+    ),
+    Preterm_37 = dplyr::case_when(
+      .data[["Birth.outcome"]] == "Non-live birth" ~ NA,
+      .data[["Birth.outcome"]] == "Live birth"  & .data[["GA.at.outcome.weeks"]] < 37 ~ "Yes",
+      .default = "No"
+    ),
+    dplyr::across(
+      .cols = c(
+        "Have_Live_Birth", "Preterm_32", "Preterm_35", "Preterm_37"),
+      .fns = \(x){
+        factor(x, levels = c("No", "Yes"))
+      }
+    )
+  )
+```
+
+Here is how it looks like.
+
+```{r}
+#| label: print processed opt data
+#| code-fold: true
+
+opt_data |> 
+  reactable::reactable(
+    columns = list(
+      PID = reactable::colDef(
+        sticky = "left"
+      ),
+      Group = reactable::colDef(
+        sticky = "left"
+      )
+    ),
+    filterable = TRUE,
+    paginationType = "jump",
+    defaultPageSize = 5,
+    minRows = 5)
+
+```
+
+## Age, Race, and Education Summary Table
+
+Below is the code used to create the age, race, and education summary table using [`gtsummary`](https://www.danieldsjoberg.com/gtsummary/){target="_blank"}.
+
+```{r}
+#| label: select relevant columns
+opt_age_race_data <- opt_data |> 
+  dplyr::select(
+    c("PID", "Group", 
+      "Age", "White", "Black", "Hisp", "Education")
+  )
+
+opt_age_race_table <- opt_age_race_data |>
+  gtsummary::tbl_summary(
+    include = c("Age", "White", "Black", "Hisp", "Education"),
+    by = "Group",
+    label = list(
+      "Age" ~ "Age - yr",
+      "Hisp" ~ "Hispanic",
+      "Education" ~ "Education - no. (%)"
+    ),
+    statistic = list(
+      gtsummary::all_continuous() ~ "{mean}±{sd}",
+      gtsummary::all_categorical() ~ "{n} ({p})"
+    ),
+    digits = list(
+      gtsummary::all_continuous() ~ 1,
+      gtsummary::all_categorical() ~ c(0, 1)
+    )
+  ) |> 
+  gtsummary::add_variable_group_header(
+    header = "Race or ethnic group - no. (%)",
+    variables = c("White", "Black", "Hisp")
+  ) |> 
+  # Need broom R package
+  gtsummary::add_p(
+    pvalue_fun = gtsummary::label_style_pvalue(digits = 2)
+  ) |>
+  gtsummary::remove_footnote_header()
+
+opt_age_race_table
+```
+
+## Extract ARD from `gtsummary`
+
+In this section, we exploring the Analysis Ready Data (ARD) from our summary table.
+
+```{r}
+#| label: extract age race education table ard
+
+age_race_education_ard_list <- gtsummary::gather_ard(
+  opt_age_race_table
+)
+
+age_race_education_ard_list |> 
+  listviewer::reactjson()
+```
+
+### Extract Education Summary ARD
+
+We extract the education summary ARD.
+
+```{r}
+#| label: extract education summary ard
+
+education_summary_ard <- age_race_education_ard_list |> 
+  purrr::pluck("tbl_summary") |> 
+  cards::apply_fmt_fun() |> 
+  cards::unlist_ard_columns(
+    -c("stat", "fmt_fun", "warning", "error")
+  ) |> 
+  dplyr::filter(
+    .data[["variable"]] == "Education" &
+    .data[["variable_level"]] == "≤8 yr"
+  )
+```
+
+```{r}
+#| label: print education summary ard
+
+education_summary_ard |> 
+  reactable::reactable(
+    filterable = TRUE,
+    paginationType = "jump",
+    defaultPageSize = 3,
+    minRows = 3)
+```
+
+### Extract Education statistics ARD
+
+We extract the education summary statistics ARD.
+
+```{r}
+#| label: extract education statistics ard
+
+education_statistics_ard <- age_race_education_ard_list |> 
+  purrr::pluck("add_p", "Education") |> 
+  cards::apply_fmt_fun() |> 
+  cards::unlist_ard_columns(
+    -c("stat", "fmt_fun", "warning", "error")
+  )
+```
+
+```{r}
+#| label: print education statistics ard
+
+education_summary_ard |> 
+  reactable::reactable(
+    filterable = TRUE,
+    paginationType = "jump",
+    defaultPageSize = 1,
+    minRows = 1)
+
+```
+  
+### Combine and convert as Json
+
+We combine the two ARD together and convert the data frame to json.
+
+```{r}
+#| label: extract ARD as Json
+
+education_summary_ard <- age_race_education_ard_list |> 
+  purrr::pluck("tbl_summary") |> 
+  cards::apply_fmt_fun() |> 
+  dplyr::filter(
+    .data[["variable"]] == "Education"
+  )
+
+education_statistics_ard  <- age_race_education_ard_list |> 
+  purrr::pluck("add_p", "Education") |> 
+  cards::apply_fmt_fun() 
+
+education_ard <- cards::bind_ard(
+  education_summary_ard,
+  education_statistics_ard
+)
+
+age_race_ard_json <- education_ard |> 
+  cards::as_nested_list() |>
+  jsonlite::toJSON(
+    pretty = TRUE,
+    auto_unbox = TRUE, # Convert ["value"] to "value"
+    force = TRUE, # Convert NULL to {},
+    digits = NA # Full precision
+  )
+
+age_race_ard_json |> 
+  write(file = "output.json")
+```
+
+With the json file, we can paste the text into the LLM and let it generate the written results. Here is the JSON representation of the results in the table. Act as a clinician writing for a research paper and give a brief summary of the results.
+
+## ARD without `gtsummary`
+
+It is also possible to obtain the Analysis Ready Data (ARD) directly from the data frame instead of the `gtsummary` summary table.
+
+### ARD from Education only
+
+Here is how it can be done with the education (categorical) data using [`cards::ard_tabulate`](https://pharmaverse.github.io/cards/latest-tag/reference/ard_tabulate.html){target="_blank"} and [`cardx::ard_stats_chisq_test`](https://pharmaverse.github.io/cardx/latest-tag/reference/ard_stats_chisq_test.html){target="_blank"}.
+
+```{r}
+#| label: obtain ARD from data frame directly
+
+education_summary_ard_from_df <- opt_age_race_data |> 
+  cards::ard_tabulate(
+    variables = c("Education"),
+    by = "Group"
+  ) |> 
+  cards::update_ard_fmt_fun(
+    stat_names = c("n"),
+    fmt_fun = gtsummary::label_style_number(digits = 0)
+  ) |> 
+  cards::update_ard_fmt_fun(
+    stat_names = c("p"),
+    fmt_fun = gtsummary::label_style_number(digits = 1, scale = 100)
+  )
+
+education_statistics_ard_from_df <- opt_age_race_data |> 
+  cardx::ard_stats_chisq_test(
+    variables = c("Education"),
+    by = "Group",
+    correct = FALSE
+  ) |> 
+  cards::update_ard_fmt_fun(
+    stat_names = c("statistic", "parameter"),
+    fmt_fun = gtsummary::label_style_sigfig(digits = 3)
+  ) |> 
+  cards::update_ard_fmt_fun(
+    stat_names = c("p.value"),
+    fmt_fun = gtsummary::label_style_pvalue(digits = 2)
+  )
+
+combine_ard <- cards::bind_ard(
+  education_summary_ard_from_df,
+  education_statistics_ard_from_df
+)
+
+```
+
+```{r}
+#| label: print ARD from data frame
+
+combine_ard |> 
+  reactable::reactable(
+    filterable = TRUE,
+    paginationType = "jump",
+    defaultPageSize = 3,
+    minRows = 3)
+
+```
+
+We can use [`gtsummary::tbl_ard_summary`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_ard_summary.html){target="_blank"} create the summary table from ARD created. However, adding of statistical results *p* values is currently not supported.
+
+```{r}
+#| label: create education summary table from education_summary_ard_from_df
+gtsummary::tbl_ard_summary(
+  education_summary_ard_from_df,
+  by = "Group"
+)
+
+```
+
+### ARD from Age, Race and Education
+
+Here is how it can be done.
+
+  -  For Education (categorical), use [`cards::ard_tabulate`](https://pharmaverse.github.io/cards/latest-tag/reference/ard_tabulate.html){target="_blank"}.
+  -  For Age (continuous), use [`cards::ard_summary`](https://pharmaverse.github.io/cards/latest-tag/reference/ard_summary.html){target="_blank"}.
+  -  For White, Black, Hisp (dichotomous), use [`cards::ard_tabulate_value`](https://pharmaverse.github.io/cards/latest-tag/reference/ard_tabulate_value.html){target="_blank"}.
+
+We then combine using [`cards::ard_stack`](https://pharmaverse.github.io/cards/latest-tag/reference/ard_stack.html){target="_blank"}.
+
+```{r}
+#| label: build cards
+
+age_race_education_ard_from_df <- opt_age_race_data |>
+  cards::ard_stack(
+    cards::ard_summary(
+      variables = c("Age"),
+      statistic = list(
+        Age = cards::continuous_summary_fns(
+          summaries = c("mean", "sd")
+        )
+      ),
+      stat_label = list(
+        Age = list(mean = "Mean", sd = "SD")
+      ),
+      fmt_fun = list(
+        Age = list(
+          mean = \(x) gtsummary::style_number(x, digits = 1)
+        )
+      )
+    ),
+    # cardx::ard_stats_wilcox_test(
+    #   variables = "Age",
+    #   conf.int = TRUE,
+    # ),
+    cards::ard_tabulate_value(variables = c("White", "Black", "Hisp")),
+    cards::ard_tabulate(variables = c("Education")),
+    .by = "Group",
+    .missing = TRUE,
+    .attributes = TRUE,
+    .total_n = TRUE
+  )
+```
+
+We can use [`gtsummary::tbl_ard_summary`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_ard_summary.html){target="_blank"} create the summary table from ARD created. However, adding of statistical results *p* values is currently not supported.
+
+```{r}
+#| label: create education summary table from age_race_ard_from_df
+
+age_race_education_ard_from_df |> 
+  gtsummary::tbl_ard_summary(
+    by = "Group",
+    label = list(
+      "Age" ~ "Age - yr",
+      "Hisp" ~ "Hispanic",
+      "Education" ~ "Education - no. (%)"
+    ),
+    statistic = list(
+      gtsummary::all_continuous() ~ "{mean}±{sd}",
+      gtsummary::all_categorical() ~ "{n} ({p})"
+    )
+  )|> 
+  gtsummary::add_variable_group_header(
+    header = "Race or ethnic group - no. (%)",
+    variables = c("White", "Black", "Hisp")
+  ) |> 
+  gtsummary::remove_footnote_header()
+
+
+```
+
+## Theming in `gtsummary`
+
+```{r}
+#| label: jama theming in gtsummary
+
+gtsummary::theme_gtsummary_journal(journal = "jama")
+
+opt_age_race_data |>
+  gtsummary::tbl_summary(
+    include = c("Age", "White", "Black", "Hisp", "Education"),
+    by = "Group",
+    label = list(
+      "Age" ~ "Age - yr",
+      "Hisp" ~ "Hispanic",
+      "Education" ~ "Education - no. (%)"
+    )
+  ) |> 
+  gtsummary::add_variable_group_header(
+    header = "Race or ethnic group - no. (%)",
+    variables = c("White", "Black", "Hisp")
+  ) |> 
+  gtsummary::add_p() 
+
+gtsummary::reset_gtsummary_theme()
+```
+
+## Export Tables from `gtsummary`
+
+### Exporting Tables from `gtsummary` using derrick
+
+```{r}
+#| label: export table using derrick
+
+paths <- derrick::gtsummary_reporter(
+  gts_obj = opt_age_race_table,
+  file_path = "outputs/t-demog.rtf",
+  output_types = c("RTF", "TXT", "DOCX", "PDF", "HTML"),
+  column_widths = "3|1|1|1",
+  report_orientation = "portrait",
+  report_paper_size = "A4",
+  max_chars_per_line = 132,
+  save_rds = FALSE
+)
+
+paths
+```
+
+
+### Exporting Tables from `gtsummary` to Word using flextable
+
+```{r}
+#| label: export table to Word using flextable
+
+opt_age_race_flextable <- opt_age_race_table |> 
+  gtsummary::as_flex_table() |> 
+  flextable::width(
+    width = c(3, 1, 1, 1),
+    unit = "in")
+  
+# Define text formatting properties (font family, size, color, etc.)
+text_prop <- officer::fp_text(
+  font.family = "Arial",
+  font.size = 11, 
+  color = "black"
+)
+
+wd_document <- officer::read_docx() |> 
+  officer::body_add_fpar(
+    officer::fpar(
+      officer::ftext("Here is the summary table:", text_prop),
+      officer::run_linebreak()
+    ),
+    style = "Normal"
+  ) |> 
+  flextable::body_add_flextable(value = opt_age_race_flextable)
+
+print(wd_document, target = "table.docx")
+
+if(interactive()) {
+  oxview::ox_view("table.docx")
+}
+```
+
+### Exporting Tables from `gtsummary` to Excel using flexlsx and openxlsx2
+
+```{r}
+#| label: export table to Excel using flextable and flexlsx
+
+opt_age_race_flextable <- opt_age_race_table |> 
+  gtsummary::as_flex_table()
+
+# Create a workbook
+wb <- openxlsx2::wb_workbook()
+
+wb <- wb |> 
+  openxlsx2::wb_add_worksheet(
+    sheet = "Results"
+  ) |> 
+  flexlsx::wb_add_flextable(
+    sheet = "Results", 
+    ft = opt_age_race_flextable, 
+    dims = "A1"
+  ) |> 
+  openxlsx2::wb_add_cell_style(
+    sheet = "Results", 
+    dims = openxlsx2::wb_dims(rows = c(4:6, 8:10), cols = 1), 
+    indent = 1
+    # style = style_indented
+    # horizontal = "right"
+  ) |> 
+  openxlsx2::wb_set_col_widths(
+    sheet = "Results", 
+    cols = 1:4, 
+    widths = "auto"
+  ) |> 
+  openxlsx2::wb_save(
+    file = "table.xlsx"
+  )
+
+if(interactive()) {
+  oxview::ox_view("table.xlsx")
+}
+```
+
+### Exporting Tables from `gtsummary` to Excel using huxtable and openxlsx
+
+```{r}
+#| label: export table to Excel using huxtable and openxlsx
+
+# Similar to https://www.pipinghotdata.com/posts/2024-07-26-gtsummary-to-excel/
+opt_age_race_hux_table <- opt_age_race_table |> 
+  gtsummary::as_hux_table()
+
+# Create a workbook
+wb <- openxlsx::createWorkbook()
+
+huxtable::as_Workbook(opt_age_race_hux_table, wb, sheet = "Results")
+
+openxlsx::addStyle(
+  wb, 
+  sheet = "Results", 
+  style = openxlsx::createStyle(indent = 1), 
+  rows = c(4:6, 8:10), 
+  cols = 1, 
+  gridExpand = TRUE
+)
+
+openxlsx::setColWidths(
+  wb, 
+  cols = 1:4,
+  sheet = "Results", 
+  widths = "auto"
+)
+
+openxlsx::setRowHeights(
+  wb, 
+  rows = 1,
+  sheet = "Results", 
+  heights = 30
+)
+
+openxlsx::saveWorkbook(wb, "table_hux_table.xlsx", overwrite = TRUE)
+
+if(interactive()) {
+  oxview::ox_view("table_hux_table.xlsx")
+}
+```
+
+

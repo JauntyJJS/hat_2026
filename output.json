@@ -1,0 +1,354 @@
+{
+  "variable": {
+    "Education": {
+      "variable_level": {
+        "≤8 yr": {
+          "group1": {
+            "Group": {
+              "group1_level": {
+                "Control": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 76,
+                      "stat_fmt": "76",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 410,
+                      "stat_fmt": "410",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.185365853658537,
+                      "stat_fmt": "18.5",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                },
+                "Treatment": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 78,
+                      "stat_fmt": "78",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 413,
+                      "stat_fmt": "413",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.188861985472155,
+                      "stat_fmt": "18.9",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "9-12 yr": {
+          "group1": {
+            "Group": {
+              "group1_level": {
+                "Control": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 242,
+                      "stat_fmt": "242",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 410,
+                      "stat_fmt": "410",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.590243902439024,
+                      "stat_fmt": "59.0",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                },
+                "Treatment": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 237,
+                      "stat_fmt": "237",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 413,
+                      "stat_fmt": "413",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.573849878934625,
+                      "stat_fmt": "57.4",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "> 12 yr": {
+          "group1": {
+            "Group": {
+              "group1_level": {
+                "Control": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 92,
+                      "stat_fmt": "92",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 410,
+                      "stat_fmt": "410",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.224390243902439,
+                      "stat_fmt": "22.4",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                },
+                "Treatment": {
+                  "stat_name": {
+                    "n": {
+                      "stat": 98,
+                      "stat_fmt": "98",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "N": {
+                      "stat": 413,
+                      "stat_fmt": "413",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    },
+                    "p": {
+                      "stat": 0.23728813559322,
+                      "stat_fmt": "23.7",
+                      "warning": {},
+                      "error": {},
+                      "context": "tabulate"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "stat_name": {
+        "levels": {
+          "stat": ["≤8 yr", "9-12 yr", "> 12 yr"],
+          "stat_fmt": {},
+          "warning": {},
+          "error": {},
+          "context": "attributes"
+        },
+        "class": {
+          "stat": "factor",
+          "stat_fmt": {},
+          "warning": {},
+          "error": {},
+          "context": "attributes"
+        },
+        "label": {
+          "stat": "Education - no. (%)",
+          "stat_fmt": "Education - no. (%)",
+          "warning": {},
+          "error": {},
+          "context": "attributes"
+        }
+      },
+      "group1": {
+        "Group": {
+          "group1_level": {
+            "Control": {
+              "stat_name": {
+                "N_obs": {
+                  "stat": 410,
+                  "stat_fmt": "410",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "N_miss": {
+                  "stat": 0,
+                  "stat_fmt": "0",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "N_nonmiss": {
+                  "stat": 410,
+                  "stat_fmt": "410",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "p_miss": {
+                  "stat": 0,
+                  "stat_fmt": "0",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "p_nonmiss": {
+                  "stat": 1,
+                  "stat_fmt": "100",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                }
+              }
+            },
+            "Treatment": {
+              "stat_name": {
+                "N_obs": {
+                  "stat": 413,
+                  "stat_fmt": "413",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "N_miss": {
+                  "stat": 0,
+                  "stat_fmt": "0",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "N_nonmiss": {
+                  "stat": 413,
+                  "stat_fmt": "413",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "p_miss": {
+                  "stat": 0,
+                  "stat_fmt": "0",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                },
+                "p_nonmiss": {
+                  "stat": 1,
+                  "stat_fmt": "100",
+                  "warning": {},
+                  "error": {},
+                  "context": "missing"
+                }
+              }
+            }
+          },
+          "stat_name": {
+            "statistic": {
+              "stat": 0.256707586530929,
+              "stat_fmt": "0.257",
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "p.value": {
+              "stat": 0.879542148003494,
+              "stat_fmt": "0.88",
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "parameter": {
+              "stat": 2,
+              "stat_fmt": "2.00",
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "method": {
+              "stat": "Pearson's Chi-squared test",
+              "stat_fmt": {},
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "correct": {
+              "stat": false,
+              "stat_fmt": {},
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "p": {
+              "stat": {},
+              "stat_fmt": {},
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "rescale.p": {
+              "stat": false,
+              "stat_fmt": {},
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "simulate.p.value": {
+              "stat": false,
+              "stat_fmt": {},
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            },
+            "B": {
+              "stat": 2000,
+              "stat_fmt": "2000.0",
+              "warning": {},
+              "error": {},
+              "context": "stats_chisq_test"
+            }
+          }
+        }
+      }
+    }
+  }
+}
